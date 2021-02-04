@@ -1,0 +1,56 @@
+﻿<Page
+    x:Class="Sukka.PlayerData"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Sukka"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d" Foreground="Black" FocusVisualPrimaryBrush="Black">
+
+
+
+    <Grid FocusVisualPrimaryBrush="Black">
+        <StackPanel Orientation="Horizontal" FocusVisualPrimaryBrush="Black" Background="#FF262626" Grid.RowSpan="2">
+            <controls:DataGrid x:Name="dataGrid" ItemsSource="{Binding}" AlternatingRowBackground="Transparent" AlternatingRowForeground="Transparent" AutoGenerateColumns="False" IsReadOnly="True" Width="1843" Height="1002" GridLinesVisibility="All" CanBeScrollAnchor="True" VerticalAlignment="Top">
+                <controls:DataGrid.Columns>
+                    <controls:DataGridTextColumn
+                    Header="MCID"
+                    Binding="{Binding MCID}"
+                    Width="200" Foreground="#FF15BF91"
+                    FontFamily="Arial"/>
+                    <controls:DataGridTextColumn
+                    Header="SC"
+                    Binding="{Binding SC}"
+                    Width="500" Foreground="#FF15BF91"
+                    FontFamily="Arial"/>
+                    <controls:DataGridTextColumn
+                    Header="Contribution"
+                    Binding="{Binding Contribution}"
+                    Width="500" Foreground="#FF15BF91"
+                    FontFamily="Arial"/>
+                    <controls:DataGridTextColumn
+                    Header="ID"
+                    Binding="{Binding ID}"
+                    Width="70" Foreground="#FF15BF91"
+                    FontFamily="Arial"/>
+                </controls:DataGrid.Columns>
+            </controls:DataGrid>
+            <AppBarButton Icon="Filter" Label="Filter by" Foreground="#FF15BF91" Margin="9,0,0,0">
+                <AppBarButton.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="SCHigh" Text="SCポイントを高い順に並び変える" Click="FilterSCHigh" Background="{x:Null}" />
+                        <MenuFlyoutItem x:Name="SCLow" Text="SCポイントを低い順に並び変える" Click="FilterSCLow" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Name="ContributionHigh" Text="Contributionポイントを高い順に並び変える" Click="FilterContributionHigh" />
+                        <MenuFlyoutItem x:Name="ContributionLow" Text="Contributionポイントを低い順に並び変える" Click="FilterContributionLow" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Name="MCID" Text="MCIDをアルファベット順に並び変える" Click="FilterMCID"/>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Name="ID" Text="IDを１から順に並び変える" Click="FilterID"/>
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+        </StackPanel>
+    </Grid>
+</Page>
