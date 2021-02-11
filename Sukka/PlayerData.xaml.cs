@@ -95,15 +95,25 @@ namespace Sukka
         // DataGridにデータを追加するメソッド
         public static List<Customer> Customers()
         {
-            // 新しいリストを作ってそこに一つずつCustomerクラスを入れていく
-            var unsortedList = new List<Customer>
-            {
-                new Customer("sota70", 3, 1, 0),
-                new Customer("sukka65536", 2, 1, 1),
-                new Customer("sample2", 1, 1, 2),
-                new Customer("sample3", 100, 1, 3)
-            };
+            MainPage mainPage = MainPage.returnInstance();
 
+            var unsortedList = new List<Customer>();
+
+            foreach (Button buttonsInNameList in mainPage.getAllButtonFromNameList())
+            {
+                var playerdataDictionary = DictionaryManager.getDictionary();
+
+                string playername = buttonsInNameList.Content.ToString();
+
+                int    sc           = playerdataDictionary[playername].getSc_();
+                int    contribution = playerdataDictionary[playername].getContribution_();
+                string mcid         = playername;
+                int    id           = playerdataDictionary[playername].getId_();
+
+                var playerdata = new Customer(mcid, sc, contribution, id);
+
+                unsortedList.Add(playerdata);
+            }
 
             // DataGridのデータのコピーを取る
             customers = unsortedList;

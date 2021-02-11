@@ -7,85 +7,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" Width="1920" Height="1079.8" Foreground="Black">
 
-    <!--
-    <Page.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{ThemeResource ButtonBackground}"/>
-            <Setter Property="BackgroundSizing" Value="OuterBorderEdge"/>
-            <Setter Property="Foreground" Value="{ThemeResource ButtonForeground}"/>
-            <Setter Property="BorderBrush" Value="{ThemeResource ButtonBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="{ThemeResource ButtonBorderThemeThickness}"/>
-            <Setter Property="Padding" Value="{StaticResource ButtonPadding}"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}"/>
-            <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
-            <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}"/>
-            <Setter Property="FocusVisualMargin" Value="-3"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter x:Name="ContentPresenter" AutomationProperties.AccessibilityView="Raw" BackgroundSizing="{TemplateBinding BackgroundSizing}" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" CornerRadius="{TemplateBinding CornerRadius}" ContentTransitions="{TemplateBinding ContentTransitions}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Padding="{TemplateBinding Padding}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal">
-                                        <Storyboard>
-                                            <PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>
-                                        </Storyboard>
-                                    </VisualState>
-                                    <VisualState x:Name="PointerOver">
-                                        
-                                    </VisualState>
-                                    <VisualState x:Name="Pressed">
-                                        <Storyboard>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBackgroundPressed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBorderBrushPressed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonForegroundPressed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>
-                                        </Storyboard>
-                                    </VisualState>
-                                    <VisualState x:Name="Disabled">
-                                        <Storyboard>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBackgroundDisabled}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBorderBrushDisabled}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonForegroundDisabled}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-                        </ContentPresenter>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Page.Resources>
-    -->
-
-
-    <Grid>
+    <Grid Margin="-18,0,0,0">
         <Grid.RowDefinitions>
-            <RowDefinition Height="17*"/>
-            <RowDefinition Height="253*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel x:Name="GUI" Width="466" Background="#FF262626" HorizontalAlignment="Left" Margin="0,0,0,506" Grid.RowSpan="2">
-            <Button x:Name="PlayerList" Content="PlayerList" Foreground="White" Background="#00000000" Height="152" Width="182" FontSize="30"/>
-            <AppBarButton x:Name="TestAppBarButton" Icon="Filter" Label="PlayerList" Width="82" Height="68" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-        </StackPanel>
-        <ScrollViewer Grid.RowSpan="2" Foreground="Black">
-            <StackPanel x:Name="NameList" Margin="3,154,1454,0" FocusVisualPrimaryBrush="{x:Null}" FocusVisualSecondaryBrush="{x:Null}" Background="White" Height="924" Width="466">
+
+        <!--ScrollViewerでサイズ調整や位置調整をしないといけない。stackpanel側でそれを行うとバグが起きる-->
+        <ScrollViewer Margin="0,0,1472,0" Height="929" VerticalAlignment="Bottom">
+            <StackPanel x:Name="NameList" Height="6721" Background="White">
                 <Button x:Name="Sample" Content="Sample" Height="87" Width="465" FontSize="60" FontFamily="Arial" Foreground="Black" Background="{x:Null}" Click="ShowPoints"/>
                 <Button x:Name="Add" Content="Add" Height="40" Width="70" RenderTransformOrigin="1.376,1.125" Background="{x:Null}" BorderBrush="{x:Null}" FocusVisualPrimaryBrush="{x:Null}" FocusVisualSecondaryBrush="{x:Null}" Foreground="White" FontSize="20" FontFamily="Arial" Click="AddData" HorizontalAlignment="Center" ManipulationMode="TranslateX, TranslateY, Scale">
                     <Button.Template>
@@ -98,6 +28,9 @@
                 </Button>
             </StackPanel>
         </ScrollViewer>
+        <StackPanel x:Name="GUI" Width="466" Background="#FF262626" HorizontalAlignment="Left" Margin="0,0,0,929">
+            <TextBlock x:Name="PlayerList" Text="PlayerList" Foreground="White" Height="95" Width="332" FontSize="70" HorizontalAlignment="Center" Margin="15,38,0,0" FontFamily="Arial"/>
+        </StackPanel>
         <StackPanel x:Name="Display" Margin="466,0,0,0" FocusVisualPrimaryBrush="{x:Null}" FocusVisualSecondaryBrush="{x:Null}" Grid.RowSpan="2">
             <Image x:Name="darkbackground" Source="/Assets/darksugarcane.png" Height="1081" Width="2016" Margin="-1,0,0,0"/>
             <TextBlock x:Name="mcid" Text="sota70" Foreground="White" HorizontalAlignment="Center" FontSize="200" Margin="0,-1406,0,0" Height="224" FontFamily="Arial" DoubleTapped="ChangeMCID"/>
@@ -107,25 +40,7 @@
                 </TextBlock.RenderTransform>
             </TextBlock>
             <TextBlock x:Name="Point" Text="SC" FontSize="100" FontFamily="Arial" FocusVisualPrimaryBrush="#FF0790A6" HorizontalAlignment="Center" Margin="0,-629,-295,0" Height="98" Foreground="#FF15BF91"/>
-            <Button x:Name="Red" Content="RED" Height="64" Width="165" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-1035,777,0" FontFamily="Arial" FontSize="30" Background="{x:Null}" FontStyle="Normal" FontWeight="Normal" FocusVisualPrimaryBrush="{x:Null}" Foreground="White" FocusVisualSecondaryBrush="{x:Null}" BorderBrush="{x:Null}" Padding="11,4,8,5">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Name="redborder" BorderThickness="1" Background="#FF15BF91" CornerRadius="30" FocusVisualPrimaryBrush="{x:Null}" FocusVisualSecondaryBrush="{x:Null}">
-                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-            <Button x:Name="GREEN" Content="GREEN" Height="64" Width="165" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-1035,525,0" FontFamily="Arial" FontSize="30" Foreground="White">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Name="greenborder" BorderThickness="1" Background="#FF15BF91" CornerRadius="30">
-                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-            <Button x:Name="Gold" Height="64" Width="165" Margin="0,-1035,290,0" HorizontalAlignment="Right" VerticalAlignment="Top" Content="GOLD" FontFamily="Arial" FontSize="30" Foreground="White" FocusVisualSecondaryBrush="{x:Null}" FocusVisualPrimaryBrush="{x:Null}" BorderBrush="{x:Null}" Background="{x:Null}">
+            <Button x:Name="PlayerListButton" Height="64" Width="165" Margin="0,-1035,290,0" HorizontalAlignment="Right" VerticalAlignment="Top" Content="LIST" FontFamily="Arial" FontSize="30" Foreground="White" FocusVisualSecondaryBrush="{x:Null}" FocusVisualPrimaryBrush="{x:Null}" BorderBrush="{x:Null}" Background="{x:Null}" Click="ShowPlayerDataGridButton">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border Name="goldborder" BorderThickness="1" Background="#FF15BF91" CornerRadius="30">

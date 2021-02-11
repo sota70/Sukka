@@ -16,8 +16,11 @@ using Windows.UI.WindowManagement;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Windows.UI.Xaml.Hosting;
-
-// いちいち打つのが面倒だから
+using Windows.UI.Core.Preview;
+using Windows.UI.Popups;
+using Windows.UI.Core;
+using Windows.ApplicationModel.Core;
+using Windows.UI.ViewManagement;
 using Windows.Storage;
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -29,182 +32,171 @@ namespace Sukka
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        // ページごとのデータマップ宣言
-        private Dictionary<string, Points> page1 = new Dictionary<string, Points>();
+        private int dataTotal = 0;
 
-        // データをいくつ作ったかたカウントする用のinteger
-        private int count_ = 0;
-
-        private int buttoncount = 0;
+        private int buttonTotal = 0;
 
 
-        // 数値をUIから変更できるようにするためのint
-        private int scpoint_;
-        private int contributionpoint_;
+        // 数値をUIから変更できるようにするために作った
+        private int scpoint_copy;
+        private int contributionpoint_copy;
 
-        // ポイントを足すか引くかを設定する用のbool
-        private bool operators_;
+        private bool isPlus;
+
+        // アプリを開いてからデータを１回でも編集したかどうかの確認用に作った
+        public bool EditOnce = false;
 
 
-        // アプリを開いてからデータを１回でも編集したかどうか
-        private bool isEdit = false;
+        private static MainPage instance;
 
 
         public MainPage()
         {
             this.InitializeComponent();
 
-            // ページ１にサンプル用のデータを登録する
+
             Points sample__ = new Points(0, 0, 0);
 
-            page1.Add("Sample", sample__);
+            DictionaryManager.setPlayerData("Sample", sample__);
 
-            buttoncount += 1;
+            buttonTotal += 1;
 
 
-            // データファイルを初期化
             DatabaseInit();
 
 
-            // プレイヤーデータをロードする
             LoadPlayerData();
+
+            createTestSampleWindow();
+
+
+            instance = this;
         }
 
-        private void SC_SelectionChanged(object sender, RoutedEventArgs e)
+        // PlayerDataクラスでもMainPageのメソッドを使いたいから作った
+        public static MainPage returnInstance()
         {
-
+            return instance;
         }
 
-        // AddDataをクリックすると発動するボタン作成イベント
         private void AddData(object sender, RoutedEventArgs e)
         {
-            // 新しいボタン作成
-            Button newButton__ = new Button();
+            dataTotal += 1;
+
+            buttonTotal += 1;
 
 
-            // カウントの追加
-            count_ += 1;
+            Button NewButton = new Button()
+            {
+                Content             = "Sample" + buttonTotal,
+                FontSize            = 60,
+                FontFamily          = new FontFamily("Arial"),
+                Background          = null,
+                Width               = 465,
+                Height              = 87,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
 
-            buttoncount += 1;
-
-
-            // ボタンの文字設定
-            newButton__.Content = "Sample" + buttoncount;
-            newButton__.FontSize = 60;
-            newButton__.FontFamily = new FontFamily("Arial");
-
-
-            // バックグラウンドの背景を消す
-            newButton__.Background = null;
-
-
-            // ボタンのサイズ設定
-            newButton__.Width = 465;
-            newButton__.Height = 87;
+            // ※補足 NewButton.Click += ShowPoints -> ボタンにクリックイベントを追加するやつ
+            NewButton.Click += ShowPoints;
 
 
-            // ボタンにクリックイベントを追加
-            newButton__.Click += ShowPoints;
+            NewButton.HorizontalAlignment = HorizontalAlignment.Center;
 
 
-            // ボタンの配置位置設定
-            newButton__.HorizontalAlignment = HorizontalAlignment.Center;
+            RelativePanel.SetAlignHorizontalCenterWith(NewButton, sender);
 
 
-
-            RelativePanel.SetAlignHorizontalCenterWith(newButton__, sender);
-
-
-            // Addボタンデータ取得
             Button addbutton = Add;
 
 
-            //一度Addボタンを付けなおして位置を直す
             NameList.Children.Remove(Add);
 
-            NameList.Children.Add(newButton__);
+            NameList.Children.Add(NewButton);
 
             NameList.Children.Add(addbutton);
 
 
-            // ページに入れるデータを宣言
-            Points sample__ = new Points(1, 1, count_);
+            Points playerData = new Points(1, 1, dataTotal);
 
-            page1.Add(newButton__.Content.ToString(), sample__);
+            string playername = NewButton.Content.ToString();
+
+            DictionaryManager.setPlayerData(playername, playerData);
+
+
+            if(EditOnce == false)
+            {
+                EditOnce = true;
+            }
         }
 
-        // このボタンをクリックするとポイントが表示されるイベント
-        private void ShowPoints(object sender, RoutedEventArgs e)
+        private void ShowPoints(object clickedButton, RoutedEventArgs e)
         {
-            // クリックしたボタンのデータ取得
-            Button b__ = (Button)sender;
+            Button b__ = (Button)clickedButton;
 
 
-            // mcidを表示させる
+            // mcid（playername）を表示させる
             mcid.Text = b__.Content.ToString();
 
+            var playerdata = DictionaryManager.getDictionary();
 
-            // SCを取得
-            int sc__ = page1[b__.Content.ToString()].getSc_();
+            int scpoint = playerdata[b__.Content.ToString()].getSc_();
+            int cppoint = playerdata[b__.Content.ToString()].getContribution_();
 
-            // CPを取得
-            int cp__ = page1[b__.Content.ToString()].getContribution_();
-
-
-            // 取得したポイントを表示させる
-            SC.Text = ConvertNumber(sc__);
-            Contribution.Text = ConvertNumber(cp__);
+            string convertedSCPoint = ConvertNumber(scpoint);
+            string convertedCPPoint = ConvertNumber(cppoint);
 
 
-            // このデータのコピーを取る
-            scpoint_ = sc__;
-            contributionpoint_ = cp__;
+            // UIにポイントを表示させる
+            SC.Text = convertedSCPoint;
+            Contribution.Text = convertedCPPoint;
+
+
+            scpoint_copy = scpoint;
+            contributionpoint_copy = cppoint;
 
         }
 
         private async void ChangeSC(object sender, DoubleTappedRoutedEventArgs e)
         {
-            // 入力した数字を取得する
-            string text = await InputTextDialogAsync("Change SC");
+            string orderedPoints = await InputPointsDialogAsync("Change SC");
 
 
-            // 取得した数字を元の数字に足して再表示する
+            // ※補足 int.TryParse(orderedPoints, out d)) -> 取得した数字を元の数字に足して再表示する
             int d;
-            if (int.TryParse(text, out d))
+            if (int.TryParse(orderedPoints, out d))
             {
-                // operators_がtrueだった場合数字を足す。operators_がfalseだった場合数字を引く
-                if (operators_ == true)
+                if (isPlus)
                 {
-                    // ポイントの合計を計算して取得
-                    int total__ = scpoint_ + d;
-                    SC.Text = ConvertNumber(total__);
+                    int totalpoints = scpoint_copy + d;
+                    SC.Text = ConvertNumber(totalpoints);
+
+                    var playerdata = DictionaryManager.getDictionary();
+
+                    playerdata[mcid.Text].setSc_(totalpoints);
+                    scpoint_copy = totalpoints;
 
 
-                    // データベースに新しくデータを更新して、scpointも更新する
-                    page1[mcid.Text].setSc_(total__);
-                    scpoint_ = total__;
-
-
-                    // データ編集をしたことを記録する
-                    if (isEdit) return;
-
-                    isEdit = true;
+                    if(EditOnce == false)
+                    {
+                        EditOnce = true;
+                    }
                 } else
                 {
-                    // ポイントの合計を計算して取得
-                    int total__ = scpoint_ - d;
-                    SC.Text = ConvertNumber(total__);
+                    var playerdata = DictionaryManager.getDictionary();
+
+                    int totalpoints = scpoint_copy - d;
+                    SC.Text = ConvertNumber(totalpoints);
 
 
-                    // データベースに新しくデータを更新して、scpointも更新する
-                    page1[mcid.Text].setSc_(total__);
-                    scpoint_ = total__;
+                    playerdata[mcid.Text].setSc_(totalpoints);
+                    scpoint_copy = totalpoints;
 
 
-                    // データ編集をしたことを記録する
-                    if (isEdit) return;
-
-                    isEdit = true;
+                    if(EditOnce == false)
+                    {
+                        EditOnce = true;
+                    }
                 }
             }
         }
@@ -212,58 +204,53 @@ namespace Sukka
 
         private async void ChangeContribution(object sender, DoubleTappedRoutedEventArgs e)
         {
-            // 入力した数字を取得する
-            string text = await InputTextDialogAsync("Change Contribution");
+            string orderedPoints = await InputPointsDialogAsync("Change Contribution");
 
 
-            // 取得した数字を元の数字に足して再表示する
+            // ※補足 int.TryParse(orderedPoints, out d)) -> string型からint型へ変換する
             int d;
-            if (int.TryParse(text, out d))
+            if (int.TryParse(orderedPoints, out d))
             {
-                // operators_がtrueだった場合数字を足す。operators_がfalseだった場合数字を引く
-                if (operators_ == true)
+
+                var playerdata = DictionaryManager.getDictionary();
+
+                if (isPlus)
                 {
-                    // ポイントの合計を計算して取得
-                    int total__ = contributionpoint_ + d;
-                    Contribution.Text = ConvertNumber(total__);
+                    int totalpoints = contributionpoint_copy + d;
+                    Contribution.Text = ConvertNumber(totalpoints);
 
 
-                    // データベースに新しくデータを更新して、scpointも更新する
-                    page1[mcid.Text].setContribution_(total__);
-                    contributionpoint_ = total__;
+                    playerdata[mcid.Text].setContribution_(totalpoints);
+                    contributionpoint_copy = totalpoints;
 
 
-                    // データ編集をしたことを記録する
-                    if (isEdit) return;
-
-                    isEdit = true;
+                   if(EditOnce == false)
+                    {
+                        EditOnce = true;
+                    }
                 }
                 else
                 {
-                    // ポイントの合計を計算して取得
-                    int total__ = contributionpoint_ - d;
-                    Contribution.Text = ConvertNumber(total__);
+                    int totalpoints = contributionpoint_copy - d;
+                    Contribution.Text = ConvertNumber(totalpoints);
 
 
-                    // データベースに新しくデータを更新して、scpointも更新する
-                    page1[mcid.Text].setContribution_(total__);
-                    contributionpoint_ = total__;
+                    playerdata[mcid.Text].setContribution_(totalpoints);
+                    contributionpoint_copy = totalpoints;
 
 
-                    // データ編集をしたことを記録する
-                    if (isEdit) return;
-
-                    isEdit = true;
+                    if(EditOnce == false)
+                    {
+                        EditOnce = true;
+                    }
                 }
 
             }
 
         }
 
-        // ポイント設定に使うダイアログクラスを定義する
-        private async Task<string> InputTextDialogAsync(string title)
+        private async Task<string> InputPointsDialogAsync(string title)
         {
-            // テキストボックスの中身を定義
             TextBox inputTextBox = new TextBox()
             {
                 AcceptsReturn = false,
@@ -272,7 +259,6 @@ namespace Sukka
             };
 
 
-            // ダイアログの中身を定義
             ContentDialog dialog = new ContentDialog()
             {
                 Content = inputTextBox,
@@ -288,51 +274,47 @@ namespace Sukka
                 CloseButtonText = "Cancel"
             };
 
+            var result = await dialog.ShowAsync();
 
-            // Plusボタンを押した場合はoperators_をtruenに、Minusボタンを押した場合はoperators_をfalseにする
-            switch (await dialog.ShowAsync())
+            switch (result)
             {
                 case ContentDialogResult.Primary:
-                    // テキストの中身が数字だった場合そのままその数字を返す
-                    int d;
-                    if (int.TryParse(inputTextBox.Text, out d))
+                    // ※補足 int.TryParse(inputTextBox.Text, out d)) -> string型からint型へ変換する
+                    int parseResult;
+
+                    if (int.TryParse(inputTextBox.Text, out parseResult))
                     {
-                        operators_ = true;
-                        return d.ToString();
-                        break;
+                        isPlus = true;
+
+                        return parseResult.ToString();
                     }
                     else
                     {
                         return "";
-                        break;
                     }
                 case ContentDialogResult.Secondary:
-                    // テキストの中身が数字だった場合そのままその数字を返す
-                    int d2;
-                    if (int.TryParse(inputTextBox.Text, out d2))
+                    int parseResult2;
+
+                    if (int.TryParse(inputTextBox.Text, out parseResult2))
                     {
-                        operators_ = false;
-                        return d2.ToString();
-                        break;
+                        isPlus = false;
+
+                        return parseResult2.ToString();
                     }
                     else
                     {
                         return "";
-                        break;
                     }
                 default:
                     return "";
-                    break;
 
             }
 
 
         }
 
-        // UIのMCIDを変えるメソッド
         private async void InputMCIDDIalogAsync(string title)
         {
-            // テキストボックスの中身を定義
             TextBox inputTextBox = new TextBox
             {
                 AcceptsReturn = false,
@@ -340,7 +322,6 @@ namespace Sukka
             };
 
 
-            // ダイアログの中身を定義
             ContentDialog dialog = new ContentDialog
             {
                 Content = inputTextBox,
@@ -350,173 +331,76 @@ namespace Sukka
                 CloseButtonText = "Cancel"
             };
 
+            var result = await dialog.ShowAsync();
 
-            // OKを押したらinputTextBoxに入力した文字をMCIDにする
-            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            var OK = ContentDialogResult.Primary;
+
+            if (result == OK)
             {
-                // inputTextBoxに何も入力していた場合はキャンセルして、文字を入力していた場合だけ作動するようにする
-                if (inputTextBox.Text != null)
-                {
-                    ChangeStyle(mcid.Text, inputTextBox.Text);
+                if (inputTextBox.Text == null) return;
 
 
-                    // データとmcidのテキストを入れ替える
-                    Points deta = page1[mcid.Text];
-                    page1.Remove(mcid.Text);
-                    page1.Add(inputTextBox.Text, deta);
+                ChangeStyle(mcid.Text, inputTextBox.Text);
 
 
-                    mcid.Text = inputTextBox.Text;
+                // データとmcidのテキストを入れ替える
+                var playerdata = DictionaryManager.getDictionary();
+
+                Points data = playerdata[mcid.Text];
+                playerdata.Remove(mcid.Text);
+                playerdata.Add(inputTextBox.Text, data);
+
+                DictionaryManager.setPlayerData(mcid.Text, data);
 
 
-                    // データ編集をしたことを記録する
-                    if (isEdit) return;
+                mcid.Text = inputTextBox.Text;
 
-                    isEdit = true;
-                }
-            }
-            else
-            {
 
+                if (EditOnce) return;
+
+                EditOnce = true;
             }
         }
 
-        private async void ChangeMCID(object sender, DoubleTappedRoutedEventArgs e)
+        private void ChangeMCID(object sender, DoubleTappedRoutedEventArgs e)
         {
             InputMCIDDIalogAsync("Change MCID");
         }
 
-        // NameListのボタンの名前を変更する時に使うメソッド
         private void ChangeStyle(string buttonName, string newName)
         {
-            // NameListの中にあるボタンの中から名前の合うものだけを取得する
-            int count = NameList.Children.Count;
-            for (int i = 0; i < count; i++)
+            int buttonCount = NameList.Children.Count;
+
+            for (int i = 0; i < buttonCount; i++)
             {
-                if (NameList.Children[i] is Button && ((Button)NameList.Children[i]).Content.ToString().Equals(buttonName, StringComparison.OrdinalIgnoreCase))
+                bool conditionsForChangingStyle = NameList.Children[i] is Button && ((Button)NameList.Children[i]).Content.ToString().Equals(buttonName, StringComparison.OrdinalIgnoreCase);
+
+                if (conditionsForChangingStyle)
                 {
-                    // ボタンデータを取得したら新しいデータに書き換える
-                    ((Button)NameList.Children[i]).Name = newName;
+                    ((Button)NameList.Children[i]).Name    = newName;
                     ((Button)NameList.Children[i]).Content = newName;
                 }
             }
-
-
-            /*
-            Button myButton = (from child in NameList.Children where child is Button && ((Button)child).Name.Equals(buttonName, StringComparison.OrdinalIgnoreCase) select (Button)child).FirstOrDefault();
-
-            // 取得したボタンからデータを変更する
-            myButton.Name = newName;
-            myButton.Content = newName;
-            */
-
-
-        }
-
-        // データをファイルにセーブするメソッド
-        private async void saveFile()
-        {
-            // ファイルに入れるデータを宣言する
-            string text = "１行目\r\n";
-
-            // 実際にそのデータをファイルに入れる
-
-        }
-
-        // データファイルを作るメソッド
-        private async void createFile()
-        {
-
-            // データを保存するフォルダーを作る
-            var projectFolderName = "sukkaproject";
-
-            // ライブラリーフォルダーに既にフォルダーが作成されてるかどうか確認する
-            if (await isFilePresent(KnownFolders.DocumentsLibrary, projectFolderName))
-            {
-                Debug.WriteLine("This folder already exists");
-
-                var item = await KnownFolders.DocumentsLibrary.GetFolderAsync(projectFolderName);
-
-                // ファイルが既にフォルダーに存在するか確認する
-                if (await isFilePresent(item, "sukka.txt"))
-                {
-                    Debug.WriteLine("This file already exists");
-                }
-                else
-                {
-                    // データを保存するファイル(.txt)をフォルダーの中に作る
-                    StorageFile sampleFile = await item.CreateFileAsync("sukka.txt", CreationCollisionOption.OpenIfExists);
-
-                    /*
-                    // 作ったファイルを他のメソッドでも使えるようにデータを取る
-                    sukkaFile = sampleFile;
-                    */
-
-                    var listOfStrings = new List<string> { "line1", "line2", "line3" };
-
-                    await FileIO.AppendLinesAsync(sampleFile, listOfStrings);
-
-                }
-            }
-            else
-            {
-                // ファイル保存用のフォルダー作成
-                StorageFolder projectFolder = await KnownFolders.DocumentsLibrary.CreateFolderAsync(projectFolderName);
-
-                // ファイルが既にフォルダーに存在するか確認する
-                if (await isFilePresent(projectFolder, "sukka.txt"))
-                {
-                    Debug.WriteLine("This file already exists");
-                }
-                else
-                {
-                    // データを保存するファイル(.txt)をフォルダーの中に作る
-                    StorageFile sampleFile = await projectFolder.CreateFileAsync("sukka.txt", CreationCollisionOption.OpenIfExists);
-
-                    /*
-                    // 作ったファイルを他のメソッドでも使えるようにデータを取る
-                    sukkaFile = sampleFile;
-                    */
-
-                    var listOfStrings = new List<string> { "line1", "line2", "line3" };
-
-                    await FileIO.AppendLinesAsync(sampleFile, listOfStrings);
-
-                }
-            }
-
-        }
-
-        // ファイルが既に存在するかを確認するメソッド
-        private async Task<bool> isFilePresent(StorageFolder folder, string fileName)
-        {
-            // 指定したフォルダーからファイルを取得
-            var item = await folder.TryGetItemAsync(fileName);
-            return item != null;
-
-
         }
 
         private void createPlayerData(string mcid, int sc, int contribution)
         {
-            // 保存先のファイルを取得
+            // ※補足 ApplicationDataContainer, database.Containers["key"] -> アプリのファイル内のデータベースにアクセス
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
 
             var playerContainer = database.Containers["key"];
 
 
-            // 保存したいデータ作成
+            // ※補足 ApplicationDataCompositeValue -> アプリのファイル内のデータベースに入れる用のデータの型
             ApplicationDataCompositeValue data = new ApplicationDataCompositeValue();
 
-            data["SC"] = sc;
+            data["SC"]           = sc;
             data["Contribution"] = contribution;
 
 
-            // 作ったデータをファイルに入れる
             playerContainer.Values[mcid] = data;
         }
 
-        // 指定したmcidに対応するデータを編集するメソッド
         private void EditPlayerData(string mcid, int sc, int contribution)
         {
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
@@ -524,54 +408,43 @@ namespace Sukka
             var playerContainer = database.Containers["key"];
 
 
-            // mcidに対応したデータを編集する
             ApplicationDataCompositeValue playerdata = getPlayerData(mcid);
 
-            playerdata["SC"] = sc;
+            playerdata["SC"]           = sc;
             playerdata["Contribution"] = contribution;
 
 
-            // 編集したデータを格納する
             playerContainer.Values[mcid] = playerdata;
         }
 
         private void TCreatePlayerData(string mcid, int sc, int contribution, int id)
         {
-            // 保存先のファイルを取得
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
 
             var playerContainer = database.Containers["key"];
 
 
-            // もし既にプレイヤーデータが作成されていた場合
             if (isPlayerPresent(mcid))
             {
-                // mcidに対応したデータを編集する
                 ApplicationDataCompositeValue playerdata = getPlayerData(mcid);
 
-                playerdata["SC"] = sc;
+                playerdata["SC"]           = sc;
                 playerdata["Contribution"] = contribution;
-                playerdata["ID"] = id;
+                playerdata["ID"]           = id;
 
 
-                // 編集したデータを格納する
                 playerContainer.Values[mcid] = playerdata;
             }
-
-
-            // もしプレイヤーデータが未作成の場合
-            if (!isPlayerPresent(mcid))
+            else if (!isPlayerPresent(mcid))
             {
-                // 保存したいデータ作成
                 ApplicationDataCompositeValue playerdata = new ApplicationDataCompositeValue();
 
 
-                playerdata["SC"] = sc;
+                playerdata["SC"]           = sc;
                 playerdata["Contribution"] = contribution;
-                playerdata["ID"] = id;
+                playerdata["ID"]           = id;
 
 
-                // 作ったデータをファイルに入れる
                 playerContainer.Values[mcid] = playerdata;
             }
         }
@@ -582,32 +455,29 @@ namespace Sukka
             var database = ApplicationData.Current.LocalSettings;
 
 
-            // もし既に初期化できていたら何もしない
+            // ※補足 dastabase.Containers.ContainsKey("key") -> データコンテイナーが作成されてるかどうかを調べる
             if (database.Containers.ContainsKey("key")) return;
 
 
-            // 初期化できていなかったら初期化をする
             if (!database.Containers.ContainsKey("key"))
             {
-                // データファイルを作成
                 var playerContainer = database.CreateContainer("key", ApplicationDataCreateDisposition.Always);
             }
         }
 
-        // 指定したプレイヤーデータが既に作られているかどうか確かめるメソッド
         private bool isPlayerPresent(string mcid)
         {
-            // 保存先のファイルを取得
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
+
             var playerContainer = database.Containers["key"];
 
 
-            // ファイルのプレイヤーデータ取得
             ApplicationDataCompositeValue data = (ApplicationDataCompositeValue)playerContainer.Values[mcid];
 
 
-            // もしプレイヤーデータが存在したら、trueそうでなかったら、false
-            if (data != null)
+            bool isPlayerExists = data != null;
+
+            if (isPlayerExists)
             {
                 return true;
             }
@@ -617,18 +487,18 @@ namespace Sukka
             }
         }
 
-        // 指定したmcidに対応するデータを取得するメソッド
         private ApplicationDataCompositeValue getPlayerData(string mcid)
         {
-            // databaseを取得
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
+
             var playerContainer = database.Containers["key"];
 
 
-            // 指定したプレイヤーのデータがあるかどうか調べる
             if (isPlayerPresent(mcid))
             {
-                return (ApplicationDataCompositeValue)playerContainer.Values[mcid];
+                var playerdata = (ApplicationDataCompositeValue)playerContainer.Values[mcid];
+
+                return playerdata;
             }
             else
             {
@@ -636,22 +506,25 @@ namespace Sukka
             }
         }
 
-        // NameListにボタンをロードする
         private void LoadPlayerData()
         {
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
+
             var playerContainer = database.Containers["key"];
 
 
-            // データの中にある全てのMCIDを取得する
+            // ※補足 foreach (string mcid in sortList()) -> データの中にある全てのMCIDを取得する
             foreach (string mcid in sortList())
             {
-                // mcidがSample、Add、nullではなかったら、ボタンをロードする
-                if (!mcid.Equals("Sample") && !mcid.Equals("Add"))
+                // なぜかデータからnullデータが出てしまうため、回避策としてreturnで返している
+                if (mcid == null) return;
+
+                bool mcidCondition = !mcid.Equals("Sample") && !mcid.Equals("Add");
+
+                if (mcidCondition)
                 {
                     try
                     {
-                        // ボタンの中身を定義
                         Button button = new Button
                         {
                             Content = mcid,
@@ -669,20 +542,19 @@ namespace Sukka
                         };
 
 
-                        // ボタンにクリックイベントを追加
+                        // ※補足 button.Click += ShowPoints -> ボタンにクリックイベントを追加
                         button.Click += ShowPoints;
 
-                        // カウントのセット
-                        count_ = countKeys() - 1;
 
-                        buttoncount = countKeys();
+                        dataTotal = countKeys() - 1;
+
+                        buttonTotal = countKeys();
 
 
-                        // Addボタンデータ取得
                         Button addbutton = Add;
 
 
-                        //一度Addボタンを付けなおして位置を直す
+                        // 一度Addボタンを付けなおして位置を直す
                         NameList.Children.Remove(Add);
 
                         NameList.Children.Add(button);
@@ -693,17 +565,15 @@ namespace Sukka
                         RelativePanel.SetAlignHorizontalCenterWith(button, addbutton);
 
 
-                        // データベースからプレイヤーのデータを取り出す
                         ApplicationDataCompositeValue playerdatafromdatabase = getPlayerData(mcid);
 
-                        int scpoint = (int)playerdatafromdatabase["SC"];
+                        int scpoint           = (int)playerdatafromdatabase["SC"];
                         int contributionpoint = (int)playerdatafromdatabase["Contribution"];
-                        int id = (int)playerdatafromdatabase["ID"];
+                        int id                = (int)playerdatafromdatabase["ID"];
 
-                        // ページに入れるデータを宣言
                         Points data = new Points(scpoint, contributionpoint, id);
 
-                        page1.Add(button.Content.ToString(), data);
+                        DictionaryManager.setPlayerData(button.Content.ToString(), data);
                     }
                     catch (Exception e)
                     {
@@ -716,46 +586,43 @@ namespace Sukka
 
         private string[] sortList()
         {
-            // 並び変えたいstring型のlistを定義
             var sortedList = new string[countKeys()];
 
 
-            // データの中の一つ一つに入れたIDに対応した場所に並び変える
-            foreach (string keys in getKeys())
+            foreach (string playerNamesInData in getKeys())
             {
-                var playerData = getPlayerData(keys);
-                sortedList[(int)playerData["ID"]] = keys;
+                var playerData = getPlayerData(playerNamesInData);
+
+                sortedList[(int)playerData["ID"]] = playerNamesInData;
             }
 
 
             return sortedList;
         }
 
-        // プレイヤーデータを全て削除するメソッド
         private void DeleteAllPlayerData()
         {
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
 
 
-            // データを削除
+            // ※補足 database.DeleteContainer("key") -> データベースにあるデータを全部消す
             database.DeleteContainer("key");
         }
 
-        // データベースにあるキー（mcid）を全て取得する
         private List<string> getKeys()
         {
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
             var playerContainer = database.Containers["key"];
 
 
-            // キーが一つ以上あった場合
-            if (playerContainer.Values.Keys != null)
+            var allKeysInDataBase = playerContainer.Values.Keys;
+
+            if (allKeysInDataBase != null)
             {
-                // キーが入ったリストを作る
-                List<string> keys = playerContainer.Values.Keys.ToList<string>();
+                List<string> keysList = allKeysInDataBase.ToList<string>();
 
 
-                return keys;
+                return keysList;
             }
             else
             {
@@ -763,69 +630,62 @@ namespace Sukka
             }
         }
 
-        // データベースにあるキー（mcid）の数を取得する
         private int countKeys()
         {
             ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
             var playerContainer = database.Containers["key"];
 
+            int keysTotal = playerContainer.Values.Keys.Count;
 
-            return playerContainer.Values.Keys.Count;
+
+            return keysTotal;
         }
 
-        // データセーブイベント
         private async void Click_To_Save(object sender, RoutedEventArgs e)
         {
-            // セーブのログを出す
             await ShowSaveDialog();
 
+            saveAllData();
 
-            ApplicationDataContainer database = ApplicationData.Current.LocalSettings;
+            EditOnce = false;
+        }
 
-            var playerContainer = database.Containers["key"];
-
-
-            Debug.WriteLine(playerContainer.Values);
-
-
-            // 全てのボタンを取得
+        // 他のクラスでも使うためにメソッドとして作った
+        public void saveAllData()
+        {
             foreach (Button button in getAllButtonFromNameList())
             {
                 string playername = button.Content.ToString();
 
 
-                // Addボタンが入っていた場合、無視する
+                // 元からUIに存在するボタンを除くために作った
                 if (playername.Equals("Add")) return;
 
 
-                // プレイヤーデータ取得
-                int sc = page1[playername].getSc_();
+                var playerdata = DictionaryManager.getDictionary();
 
-                int contribution = page1[playername].getContribution_();
+                int sc           = playerdata[playername].getSc_();
+                int contribution = playerdata[playername].getContribution_();
+                int id           = playerdata[playername].getId_();
 
-                int id = page1[playername].getId_();
 
-
-                // データをセーブする
                 TCreatePlayerData(playername, sc, contribution, id);
             }
         }
 
-        // NameListの中にあるボタンだけを取り出す
-        private List<Button> getAllButtonFromNameList()
+        public List<Button> getAllButtonFromNameList()
         {
-            var buttons = NameList.Children.OfType<Button>().ToList();
+            var allButtons = NameList.Children.OfType<Button>().ToList();
 
-            buttons.Remove(Add);
+            // 余計なボタンを消すための処理
+            allButtons.Remove(Add);
 
 
-            return buttons;
+            return allButtons;
         }
 
-        // セーブした時のログを出すメソッド
         private async Task<string> ShowSaveDialog()
         {
-            // ダイアログの中身を定義
             ContentDialog dialog = new ContentDialog
             {
                 Content = "You have saved the data",
@@ -835,15 +695,11 @@ namespace Sukka
             };
 
 
-            // ログを出す
-            ContentDialogResult result = await dialog.ShowAsync();
-
+            ContentDialogResult showDialog = await dialog.ShowAsync();
 
             return "";
-
         }
 
-        // 1000を1kにするメソッド
         private string ConvertNumber(int num)
         {
             if (num >= 1000000)
@@ -868,26 +724,109 @@ namespace Sukka
             }
         }
 
-        // ポイントリスト表示用のウィンドウ作成
+        // １回開いたら２回目以降開く時はWindowをリフレッシュさせるようにするために必要だからAppWindowをここに定義した
+        private AppWindow playerDataWindow;
+
         private async void createPlayerDataWindow()
         {
-            // PlayerDataウィンドウを持ってくる
-            var frame = new Frame();
+            if(playerDataWindow == null)
+            {
+                // ※補足 playerDataFrame.Navigate() -> PlayerDataのコンテンツを持ってくるメソッド
+                //        ElementCompositionPreview.SetAppWindowContent() -> Windowにコンテンツを設置するメソッド
+                //        playerDataWindow.Closed += delegate -> ウィンドウが閉まった時にウィンドウにあるコンテンツインスタンスを消すメソッド
 
-            AppWindow appWindow = await AppWindow.TryCreateAsync();
+                playerDataWindow = await AppWindow.TryCreateAsync();
 
-            frame.Navigate(typeof(PlayerData));
-            
-            ElementCompositionPreview.SetAppWindowContent(appWindow, frame);
+                Frame playerDataFrame = new Frame();
+
+                playerDataFrame.Navigate(typeof(PlayerData));
+
+                ElementCompositionPreview.SetAppWindowContent(playerDataWindow, playerDataFrame);
 
 
-            // 新しいウィンドウの表示
-            await appWindow.TryShowAsync();
+                await playerDataWindow.TryShowAsync();
+
+
+                playerDataWindow.Closed += delegate
+                {
+                    playerDataFrame.Content = null;
+
+                    playerDataWindow = null;
+                };
+            }
+            else
+            {
+                Frame playerDataFrame = new Frame();
+
+                playerDataFrame.Navigate(typeof(PlayerData));
+
+                ElementCompositionPreview.SetAppWindowContent(playerDataWindow, playerDataFrame);
+
+
+                await playerDataWindow.TryShowAsync();
+
+
+                playerDataWindow.Closed += delegate
+                {
+                    playerDataFrame.Content = null;
+
+                    playerDataWindow = null;
+                };
+            }
+        }
+
+        private AppWindow TestSampleWindow;
+
+        private async void createTestSampleWindow()
+        {
+            if (TestSampleWindow == null)
+            {
+                // ※補足 playerDataFrame.Navigate() -> PlayerDataのコンテンツを持ってくるメソッド
+                //        ElementCompositionPreview.SetAppWindowContent() -> Windowにコンテンツを設置するメソッド
+                //        playerDataWindow.Closed += delegate -> ウィンドウが閉まった時にウィンドウにあるコンテンツインスタンスを消すメソッド
+
+                TestSampleWindow = await AppWindow.TryCreateAsync();
+
+                Frame TestSampleFrame = new Frame();
+
+                TestSampleFrame.Navigate(typeof(testsample));
+
+                ElementCompositionPreview.SetAppWindowContent(TestSampleWindow, TestSampleFrame);
+
+
+                await TestSampleWindow.TryShowAsync();
+
+
+                TestSampleWindow.Closed += delegate
+                {
+                    TestSampleFrame.Content = null;
+
+                    TestSampleWindow = null;
+                };
+            }
+            else
+            {
+                Frame TestSampleFrame = new Frame();
+
+                TestSampleFrame.Navigate(typeof(testsample));
+
+                ElementCompositionPreview.SetAppWindowContent(TestSampleWindow, TestSampleFrame);
+
+
+                await TestSampleWindow.TryShowAsync();
+
+
+                TestSampleWindow.Closed += delegate
+                {
+                    TestSampleFrame.Content = null;
+
+                    TestSampleWindow = null;
+                };
+            }
         }
 
         private void ShowPlayerDataGridButton(object sender, RoutedEventArgs e)
         {
-            // PlayerDataGridを表示する
             createPlayerDataWindow();
         }
     }

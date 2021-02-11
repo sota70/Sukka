@@ -17,6 +17,8 @@ using Windows.UI.Xaml.Navigation;
 using Windows.UI.ViewManagement;
 using Windows.UI;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Core.Preview;
+using Windows.UI.Popups;
 
 namespace Sukka
 {
@@ -87,6 +89,10 @@ namespace Sukka
 
                 // Extend the core application view into title bar
                 coreTitleBar.ExtendViewIntoTitleBar = true;
+
+
+                // close window confirmイベントを設定
+                SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += App_CloseRequested;
             }
         }
 
@@ -112,6 +118,60 @@ namespace Sukka
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
+        }
+
+        // close window confirmポップアップを出すメソッド
+        private async void App_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
+        {
+            MainPage mainPage = MainPage.returnInstance();
+
+
+            // ダイアログの中身を定義
+            ContentDialog dialog = new ContentDialog()
+            {
+                Content = "データが保存されていないままです、本当に終了してもよろしいですか？",
+
+                Title = "Exit",
+
+                IsSecondaryButtonEnabled = true,
+
+                PrimaryButtonText = "保存して終了",
+
+                SecondaryButtonText = "はい",
+
+                CloseButtonText = "いいえ"
+            };
+
+            bool isDataEdit = mainPage.EditOnce;
+
+            // データが編集されていなかったらポップアップを出さないようにするために作った
+            if (isDataEdit == false)
+            {
+                Application.Current.Exit();
+
+                return;
+            }
+
+            var windowCloseProcess = e.GetDeferral();
+
+            var result = await dialog.ShowAsync();
+
+            if(result == ContentDialogResult.Primary)
+            {
+                mainPage.saveAllData();
+
+                Application.Current.Exit();
+            }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                Application.Current.Exit();
+            }
+            else
+            {
+                e.Handled = true;
+
+                windowCloseProcess.Complete();
+            }
         }
     }
 }
